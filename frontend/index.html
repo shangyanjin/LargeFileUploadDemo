@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大文件分片上传示例</title>
+    <title>Large File Upload Demo</title>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,10 +11,10 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-8" x-data="uploadHandler()">
     <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">大文件分片上传示例</h1>
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Large File Upload Demo</h1>
         
         <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2">选择文件:</label>
+            <label class="block text-gray-700 text-sm font-bold mb-2">Select File:</label>
             <input type="file" 
                    @change="handleFileSelect" 
                    class="w-full px-3 py-2 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -23,15 +23,15 @@
         <template x-if="file">
             <div class="space-y-4">
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-sm text-gray-600">文件名: <span x-text="file.name" class="font-medium"></span></p>
-                    <p class="text-sm text-gray-600">大小: <span x-text="formatFileSize(file.size)" class="font-medium"></span></p>
+                    <p class="text-sm text-gray-600">File Name: <span x-text="file.name" class="font-medium"></span></p>
+                    <p class="text-sm text-gray-600">Size: <span x-text="formatFileSize(file.size)" class="font-medium"></span></p>
                 </div>
 
                 <div class="relative pt-1">
                     <div class="flex mb-2 items-center justify-between">
                         <div>
                             <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
-                                上传进度
+                                Upload Progress
                             </span>
                         </div>
                         <div class="text-right">
@@ -51,12 +51,12 @@
                     <button @click="startUpload" 
                             :disabled="uploading"
                             class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">
-                        开始上传
+                        Start Upload
                     </button>
                     <button @click="cancelUpload" 
                             x-show="uploading"
                             class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                        取消上传
+                        Cancel Upload
                     </button>
                 </div>
 
@@ -132,12 +132,11 @@
                     this.controller = new AbortController();
 
                     try {
-                        // 计算文件 hash
                         this.fileHash = await this.calculateHash();
                         
                         const totalChunks = Math.ceil(this.file.size / this.chunkSize);
 
-                        // 检查已上传的块
+                        // Check existing chunks
                         const response = await axios.get(`http://localhost:8080/upload/chunk/check`, {
                             params: {
                                 hash: this.fileHash
@@ -147,7 +146,7 @@
                         const chunks = new Set(response.data.chunks);
                         this.progress = (chunks.size / totalChunks) * 100;
 
-                        // 上传缺失的块
+                        // Upload missing chunks
                         for (let i = 0; i < totalChunks; i++) {
                             if (chunks.has(i)) continue;
 
@@ -172,24 +171,24 @@
 
                             chunks.add(i);
 
-                            // 如果服务器返回已合并完成
+                            // Check if server has completed merging
                             if (response.data.merged) {
                                 this.uploadStatus = 'success';
-                                this.statusMessage = '文件上传并合并成功！';
+                                this.statusMessage = 'File uploaded and merged successfully!';
                                 return;
                             }
                         }
 
-                        // 如果没有提前返回，说明出现了问题
+                        // If we haven't returned early, something went wrong
                         this.uploadStatus = 'error';
-                        this.statusMessage = '文件上传失败，请重试';
+                        this.statusMessage = 'Upload failed, please try again';
                     } catch (error) {
                         if (error.name === 'AbortError') {
                             this.uploadStatus = 'error';
-                            this.statusMessage = '上传已取消';
+                            this.statusMessage = 'Upload cancelled';
                         } else {
                             this.uploadStatus = 'error';
-                            this.statusMessage = '上传失败：' + error.message;
+                            this.statusMessage = 'Upload failed: ' + error.message;
                         }
                     } finally {
                         this.uploading = false;
